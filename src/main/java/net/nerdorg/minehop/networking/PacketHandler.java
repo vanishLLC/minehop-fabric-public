@@ -98,7 +98,7 @@ public class PacketHandler {
 
     private static void handleMapCompletion(ServerPlayerEntity player, MinecraftServer server, float time) {
         float ping_limit = 300; // ping limit in ms
-        if (!player.isCreative() && !player.isSpectator()) {
+        if (!player.isCreative() && !player.isSpectator() && !Minehop.currentCheaters.contains(player)) {
             if (Minehop.timerManager.containsKey(player.getNameForScoreboard())) {
                 String map_name = ZoneUtil.getCurrentMapName(player);
 

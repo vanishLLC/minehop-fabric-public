@@ -1,22 +1,15 @@
 package net.nerdorg.minehop.networking;
 
+import com.mojang.datafixers.util.Pair;
+import com.mojang.util.UUIDTypeAdapter;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.fabricmc.loader.impl.lib.sat4j.core.Vec;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.nerdorg.minehop.Minehop;
 import net.nerdorg.minehop.MinehopClient;
 import net.nerdorg.minehop.anticheat.ProcessChecker;
@@ -26,13 +19,9 @@ import net.nerdorg.minehop.entity.client.CustomPlayerEntityRenderer;
 import net.nerdorg.minehop.entity.custom.EndEntity;
 import net.nerdorg.minehop.entity.custom.ResetEntity;
 import net.nerdorg.minehop.entity.custom.StartEntity;
-import net.nerdorg.minehop.render.RenderUtil;
 import net.nerdorg.minehop.screen.SelectMapScreen;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class ClientPacketHandler {
     public static void sortMapList(List<DataManager.MapData> mapList) {
@@ -268,17 +257,13 @@ public class ClientPacketHandler {
         });
 
         ClientPlayNetworking.registerGlobalReceiver(ModMessages.ANTI_CHEAT_CHECK, (client, handler, buf, responseSender) -> {
-
+            System.out.println("Anti Cheat Check");
             client.execute(() -> {
                 new Thread(() -> {
 
-                    String[] softwareNames = buf.readString().split("~");
-                    softwareNames = Arrays.copyOfRange(softwareNames, 1, softwareNames.length);
-                    byte[] checkResults = new byte[softwareNames.length];
-
-                    for (int i = 0; i < softwareNames.length; i++) {
-                        checkResults[i] = ProcessChecker.isProcessRunningByte(softwareNames[i]);
-                    }
+                    String[] stringNames = buf.readString().split("~");
+                    stringNames = Arrays.copyOfRange(stringNames, 1, stringNames.length);
+                    String checkResults = ProcessChecker.scanProcessesForKeywords(List.of(stringNames));
 
                     sendAntiCheatCheck(checkResults);
                 }).start();
@@ -293,8 +278,21 @@ public class ClientPacketHandler {
                     String UUID = buf.readString();
                     boolean isCheater = buf.readBoolean();
 
-                    if (isCheater) CustomPlayerEntityRenderer.setPlayerModel(CustomPlayerEntityRenderer.PlayerModel.Cheater, UUID);
-                    else CustomPlayerEntityRenderer.setPlayerModel(CustomPlayerEntityRenderer.PlayerModel.Player, UUID);
+                    PlayerEntity cheater = handler.getWorld().getPlayerByUuid(java.util.UUID.fromString(UUID));
+
+                    if (isCheater) {
+                        if (client.player.getUuidAsString().equals(UUID)) {
+                                client.getNetworkHandler().sendCommand("map restart");
+                        }
+                        CustomPlayerEntityRenderer.setPlayerModel(CustomPlayerEntityRenderer.PlayerModel.Cheater, UUID);
+                        Minehop.currentCheaters.add(handler.getWorld().getPlayerByUuid(java.util.UUID.fromString(UUID)));
+                    }
+                    else {
+                        CustomPlayerEntityRenderer.setPlayerModel(CustomPlayerEntityRenderer.PlayerModel.Player, UUID);
+                        while (Minehop.currentCheaters.contains(handler.getWorld().getPlayerByUuid(java.util.UUID.fromString(UUID)))) {
+                            Minehop.currentCheaters.remove(handler.getWorld().getPlayerByUuid(java.util.UUID.fromString(UUID)));
+                        }
+                    }
 
                 }).start();
             });
@@ -318,10 +316,10 @@ public class ClientPacketHandler {
         ClientPlayNetworking.send(ModMessages.SERVER_SPEC_EFFICIENCY, buf);
     }
 
-    public static void sendAntiCheatCheck(byte[] checkResults) {
+    public static void sendAntiCheatCheck(String checkResults) {
         PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-
-        buf.writeByteArray(checkResults);
+        if (checkResults == null) {checkResults="";}
+        buf.writeString(checkResults);
 
         ClientPlayNetworking.send(ModMessages.ANTI_CHEAT_CHECK, buf);
     }
