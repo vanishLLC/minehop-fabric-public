@@ -44,6 +44,18 @@ public class ConfigCommands {
                         })
                     )
                     .then(LiteralArgumentBuilder.<ServerCommandSource>literal("set")
+                        .then(LiteralArgumentBuilder.<ServerCommandSource>literal("toggle_fall_dmg")
+                                .executes(context -> {
+                                    handleToggleFallDamage(context);
+                                    return Command.SINGLE_SUCCESS;
+                                })
+                        )
+                        .then(LiteralArgumentBuilder.<ServerCommandSource>literal("toggle_enabled")
+                                    .executes(context -> {
+                                        handleToggleEnabled(context);
+                                        return Command.SINGLE_SUCCESS;
+                                    })
+                        )
                         .then(LiteralArgumentBuilder.<ServerCommandSource>literal("sv_friction")
                                 .then(RequiredArgumentBuilder.<ServerCommandSource, Double>argument("sv_friction", DoubleArgumentType.doubleArg())
                                         .executes(context -> {
@@ -95,6 +107,28 @@ public class ConfigCommands {
                     )
                 )
             ));
+    }
+
+    private static void handleToggleFallDamage(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity serverPlayerEntity = context.getSource().getPlayer();
+        MinehopConfig config = ConfigWrapper.config;
+
+        config.fall_damage = !config.fall_damage;
+
+        ConfigWrapper.saveConfig(config);
+
+        Logger.logSuccess(serverPlayerEntity, "Set fall damage to " + config.fall_damage);
+    }
+
+    private static void handleToggleEnabled(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity serverPlayerEntity = context.getSource().getPlayer();
+        MinehopConfig config = ConfigWrapper.config;
+
+        config.enabled = !config.enabled;
+
+        ConfigWrapper.saveConfig(config);
+
+        Logger.logSuccess(serverPlayerEntity, "Set enabled to " + config.enabled);
     }
 
     private static void handleSetFriction(CommandContext<ServerCommandSource> context) {

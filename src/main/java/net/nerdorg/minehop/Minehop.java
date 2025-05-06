@@ -53,6 +53,8 @@ public class Minehop implements ModInitializer {
 	public static double o_sv_gravity = 0;
 	public static double o_speed_cap = 0;
 	public static boolean o_hns = false;
+	public static boolean o_enabled = true;
+	public static boolean o_fall_damage = true;
 
 	public static boolean receivedConfig = false;
 

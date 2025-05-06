@@ -94,7 +94,8 @@ public abstract class LivingEntityMixin extends Entity {
 
     @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
     public void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        if (source.isOf(DamageTypes.FALL)) {
+        MinehopConfig config = ConfigWrapper.config;
+        if (source.isOf(DamageTypes.FALL) && !config.fall_damage) {
             if (this.getWorld().getEntityById(this.getId()) instanceof PlayerEntity player) {
                 DataManager.MapData mapData = ZoneUtil.getCurrentMap(player);
                 if (mapData != null && mapData.hns) {
@@ -143,11 +144,16 @@ public abstract class LivingEntityMixin extends Entity {
             config.movement.sv_maxairspeed = Minehop.o_sv_maxairspeed;
             config.movement.speed_mul = Minehop.o_speed_mul;
             config.movement.sv_gravity = Minehop.o_sv_gravity;
+            config.enabled = Minehop.o_enabled;
+            config.fall_damage = Minehop.o_fall_damage;
             speedCap = Minehop.o_speed_cap;
         }
         else {
             config = ConfigWrapper.config;
         }
+
+        //Disable if it's disabled lol
+        if (!config.enabled) { return; }
 
         //Enable for Players only
         if (this.getType() != EntityType.PLAYER) { return; }

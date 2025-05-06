@@ -43,6 +43,8 @@ public class ClientPacketHandler {
             double o_sv_gravity = buf.readDouble();
             double o_speed_cap = buf.readDouble();
             boolean o_hns = buf.readBoolean();
+            boolean o_enabled = buf.readBoolean();
+            boolean o_fall_damage = buf.readBoolean();
 
             // Ensure you are on the main thread when modifying the game or accessing client-side only classes
             client.execute(() -> {
@@ -55,6 +57,8 @@ public class ClientPacketHandler {
                 Minehop.o_sv_gravity = o_sv_gravity;
                 Minehop.o_speed_cap = o_speed_cap;
                 Minehop.o_hns = o_hns;
+                Minehop.o_enabled = o_enabled;
+                Minehop.o_fall_damage = o_fall_damage;
 
                 Minehop.receivedConfig = true;
             });
@@ -324,9 +328,10 @@ public class ClientPacketHandler {
         ClientPlayNetworking.send(ModMessages.ANTI_CHEAT_CHECK, buf);
     }
 
-    public static void sendEndMapEvent(float time) {
+    public static void sendEndMapEvent(String map_name, float time) {
         PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
 
+        buf.writeString(map_name);
         buf.writeFloat(time);
 
         ClientPlayNetworking.send(ModMessages.MAP_FINISH, buf);
