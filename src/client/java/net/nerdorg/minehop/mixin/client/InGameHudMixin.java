@@ -51,6 +51,7 @@ public abstract class InGameHudMixin {
             config.movement.sv_maxairspeed = Minehop.o_sv_maxairspeed;
             config.movement.speed_mul = Minehop.o_speed_mul;
             config.movement.sv_gravity = Minehop.o_sv_gravity;
+            config.movement.speed_coefficient = Minehop.o_speed_coefficient;
             config.nulls = ConfigWrapper.config.nulls;
             config.jHud.ssjHud = ConfigWrapper.config.jHud.ssjHud;
             config.jHud.efficiencyHud = ConfigWrapper.config.jHud.efficiencyHud;

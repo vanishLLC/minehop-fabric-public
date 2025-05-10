@@ -94,6 +94,7 @@ public abstract class LivingEntityMixin extends Entity {
 
     @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
     public void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        MinehopConfig config = ConfigWrapper.config;
         if (source.isOf(DamageTypes.FALL)) {
             if (this.getWorld().getEntityById(this.getId()) instanceof PlayerEntity player) {
                 DataManager.MapData mapData = ZoneUtil.getCurrentMap(player);
@@ -105,7 +106,8 @@ public abstract class LivingEntityMixin extends Entity {
                     }
                 }
             }
-            cir.cancel();
+            if (!config.fall_damage)
+                cir.cancel();
         }
         else {
             Entity sourceEntity = source.getSource();
@@ -143,11 +145,17 @@ public abstract class LivingEntityMixin extends Entity {
             config.movement.sv_maxairspeed = Minehop.o_sv_maxairspeed;
             config.movement.speed_mul = Minehop.o_speed_mul;
             config.movement.sv_gravity = Minehop.o_sv_gravity;
+            config.movement.speed_coefficient = Minehop.o_speed_coefficient;
+            config.enabled = Minehop.o_enabled;
+            config.fall_damage = Minehop.o_fall_damage;
             speedCap = Minehop.o_speed_cap;
         }
         else {
             config = ConfigWrapper.config;
         }
+
+        //Disable if it's disabled lol
+        if (!config.enabled) { return; }
 
         //Enable for Players only
         if (this.getType() != EntityType.PLAYER) { return; }
@@ -253,7 +261,8 @@ public abstract class LivingEntityMixin extends Entity {
             if (fullGrounded) {
                 maxVel = (float) (this.movementSpeed * config.movement.speed_mul);
             } else {
-                maxVel = (float) (config.movement.sv_maxairspeed);
+                double velVal = this.getVelocity().horizontalLength();
+                maxVel = (float) (config.movement.sv_maxairspeed * ((velVal * config.movement.speed_coefficient) / velVal));
 
                 angleBetween = Math.acos(accelVec.normalize().dotProduct(moveDir.normalize()));
 
