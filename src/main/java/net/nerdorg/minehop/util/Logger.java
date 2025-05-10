@@ -27,22 +27,6 @@ public class Logger {
         }
     }
 
-    public static void logGlobalColor(MinecraftServer server, String message, Formatting color) {
-        List<ServerPlayerEntity> playerEntities = server.getPlayerManager().getPlayerList();
-
-        for (ServerPlayerEntity playerEntity : playerEntities) {
-            playerEntity.sendMessage(prefix.copy().append(Text.literal(message).formatted(color)));
-        }
-    }
-
-    public static void logGlobal(MinecraftServer server, Text message) {
-        List<ServerPlayerEntity> playerEntities = server.getPlayerManager().getPlayerList();
-
-        for (ServerPlayerEntity playerEntity : playerEntities) {
-            playerEntity.sendMessage(prefix.copy().append(message.copy().withColor(Formatting.AQUA.getColorValue())));
-        }
-    }
-
     public static void logServer(MinecraftServer server, String message) {
         server.sendMessage(prefix.copy().append(Text.literal(message).withColor(Formatting.AQUA.getColorValue())));
     }
