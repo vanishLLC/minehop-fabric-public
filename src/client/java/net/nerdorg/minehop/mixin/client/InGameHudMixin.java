@@ -33,19 +33,12 @@ public abstract class InGameHudMixin {
 
     @Shadow protected abstract void renderHotbarItem(DrawContext context, int x, int y, float tickDelta, PlayerEntity player, ItemStack stack, int seed);
 
+
+    @Shadow @Final private static Identifier WIDGETS_TEXTURE;
+
     @Shadow @Final private MinecraftClient client;
 
-    @Shadow @Final private static Identifier HOTBAR_ATTACK_INDICATOR_BACKGROUND_TEXTURE;
-
-    @Shadow @Final private static Identifier HOTBAR_ATTACK_INDICATOR_PROGRESS_TEXTURE;
-
-    @Shadow @Final private static Identifier HOTBAR_OFFHAND_RIGHT_TEXTURE;
-
-    @Shadow @Final private static Identifier HOTBAR_OFFHAND_LEFT_TEXTURE;
-
-    @Shadow @Final private static Identifier HOTBAR_SELECTION_TEXTURE;
-
-    @Shadow @Final private static Identifier HOTBAR_TEXTURE;
+    @Shadow @Final private static Identifier ICONS;
 
     @Inject(at = @At("TAIL"), method = "render(Lnet/minecraft/client/gui/DrawContext;F)V")
     private void renderSqueedometerHud(DrawContext context, float tickDelta, CallbackInfo info) {
@@ -58,6 +51,7 @@ public abstract class InGameHudMixin {
             config.movement.sv_maxairspeed = Minehop.o_sv_maxairspeed;
             config.movement.speed_mul = Minehop.o_speed_mul;
             config.movement.sv_gravity = Minehop.o_sv_gravity;
+            config.movement.speed_coefficient = Minehop.o_speed_coefficient;
             config.nulls = ConfigWrapper.config.nulls;
             config.jHud.ssjHud = ConfigWrapper.config.jHud.ssjHud;
             config.jHud.efficiencyHud = ConfigWrapper.config.jHud.efficiencyHud;
@@ -112,13 +106,13 @@ public abstract class InGameHudMixin {
                 int i = this.scaledWidth / 2;
                 context.getMatrices().push();
                 context.getMatrices().translate(0.0F, 0.0F, -90.0F);
-                context.drawGuiTexture(HOTBAR_TEXTURE, i - 91, this.scaledHeight - 22, 182, 22);
-                context.drawGuiTexture(HOTBAR_SELECTION_TEXTURE, i - 91 - 1 + playerEntity.getInventory().selectedSlot * 20, this.scaledHeight - 22 - 1, 24, 23);
+                context.drawTexture(WIDGETS_TEXTURE, i - 91, this.scaledHeight - 22, 0, 0, 182, 22);
+                context.drawTexture(WIDGETS_TEXTURE, i - 91 - 1 + playerEntity.getInventory().selectedSlot * 20, this.scaledHeight - 22 - 1, 0, 22, 24, 22);
                 if (!itemStack.isEmpty()) {
                     if (arm == Arm.LEFT) {
-                        context.drawGuiTexture(HOTBAR_OFFHAND_LEFT_TEXTURE, i - 91 - 29, this.scaledHeight - 23, 29, 24);
+                        context.drawTexture(WIDGETS_TEXTURE, i - 91 - 29, this.scaledHeight - 23, 24, 22, 29, 24);
                     } else {
-                        context.drawGuiTexture(HOTBAR_OFFHAND_RIGHT_TEXTURE, i + 91, this.scaledHeight - 23, 29, 24);
+                        context.drawTexture(WIDGETS_TEXTURE, i + 91, this.scaledHeight - 23, 53, 22, 29, 24);
                     }
                 }
 
@@ -154,8 +148,8 @@ public abstract class InGameHudMixin {
                         }
 
                         int p = (int)(f * 19.0F);
-                        context.drawGuiTexture(HOTBAR_ATTACK_INDICATOR_BACKGROUND_TEXTURE, o, n, 18, 18);
-                        context.drawGuiTexture(HOTBAR_ATTACK_INDICATOR_PROGRESS_TEXTURE, 18, 18, 0, 18 - p, o, n + 18 - p, 18, p);
+                        context.drawTexture(ICONS, o, n, 0, 94, 18, 18);
+                        context.drawTexture(ICONS, o, n + 18 - p, 18, 112 - p, 18, p);
                     }
                 }
 

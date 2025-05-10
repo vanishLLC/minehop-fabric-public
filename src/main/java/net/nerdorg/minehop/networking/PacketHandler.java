@@ -36,9 +36,12 @@ public class PacketHandler {
         buf.writeDouble(config.movement.sv_maxairspeed);
         buf.writeDouble(config.movement.speed_mul);
         buf.writeDouble(config.movement.sv_gravity);
+        buf.writeDouble(config.movement.speed_coefficient);
         buf.writeDouble(Minehop.speedCapMap.containsKey(player.getEntityName()) ? Minehop.speedCapMap.get(player.getEntityName()) : 1000000);
         DataManager.MapData currentMap = ZoneUtil.getCurrentMap(player);
         buf.writeBoolean(currentMap != null && currentMap.hns);
+        buf.writeBoolean(config.enabled);
+        buf.writeBoolean(config.fall_damage);
 
         ServerPlayNetworking.send(player, ModMessages.CONFIG_SYNC_ID, buf);
     }
@@ -82,24 +85,24 @@ public class PacketHandler {
     public static void sendSpectators(ServerPlayerEntity player) {
         if (SpectateCommands.spectatorList.containsKey(player.getEntityName())) {
             List<String> spectators = SpectateCommands.spectatorList.get(player.getEntityName());
-            PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-            buf.writeInt(spectators.size() - 1);
-            for (String spectator : spectators) {
-                if (!spectator.equals(player.getEntityName())) {
-                    buf.writeString(spectator);
+            if (spectators.size() > 1) {
+                PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
+                buf.writeInt(spectators.size() - 1);
+                for (String spectator : spectators) {
+                    if (!spectator.equals(player.getEntityName())) {
+                        buf.writeString(spectator);
+                    }
                 }
-            }
 
-            ServerPlayNetworking.send(player, ModMessages.SEND_SPECTATORS, buf);
+                ServerPlayNetworking.send(player, ModMessages.SEND_SPECTATORS, buf);
+            }
         }
     }
 
-    private static void handleMapCompletion(ServerPlayerEntity player, MinecraftServer server, float time) {
+    private static void handleMapCompletion(ServerPlayerEntity player, MinecraftServer server, String map_name, float time) {
         float ping_limit = 300; // ping limit in ms
         if (!player.isCreative() && !player.isSpectator()) {
             if (Minehop.timerManager.containsKey(player.getEntityName())) {
-                String map_name = ZoneUtil.getCurrentMapName(player);
-
                 HashMap<String, Long> timerMap = Minehop.timerManager.get(player.getEntityName());
                 List<String> keyList = timerMap.keySet().stream().toList();
                 double rawTime = (double) (System.nanoTime() - timerMap.get(keyList.get(0))) / 1000000000;
@@ -198,6 +201,7 @@ public class PacketHandler {
 
         buf.writeInt(Minehop.mapList.size());
 
+
         for (DataManager.MapData mapData : Minehop.mapList) {
             DataManager.RecordData recordData = DataManager.getRecord(mapData.name);
             if (recordData != null) {
@@ -277,8 +281,9 @@ public class PacketHandler {
             }
         });
         ServerPlayNetworking.registerGlobalReceiver(ModMessages.MAP_FINISH, (server, player, handler, buf, responseSender) -> {
+            String map_name = buf.readString();
             float time = buf.readFloat();
-            handleMapCompletion(player, server, time);
+            handleMapCompletion(player, server, map_name, time);
         });
         ServerPlayNetworking.registerGlobalReceiver(ModMessages.SERVER_SPEC_EFFICIENCY, (server, player, handler, buf, responseSender) -> {
             double last_jump_speed = buf.readDouble();

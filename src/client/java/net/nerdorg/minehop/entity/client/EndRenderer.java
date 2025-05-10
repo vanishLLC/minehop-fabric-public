@@ -64,7 +64,7 @@ public class EndRenderer extends MobEntityRenderer<EndEntity, EndModel> {
                 Vec3d nextPosition = currentPosition.add(velocity.multiply(partialTicks));
                 if (colliderBox.contains(nextPosition)) {
                     if (MinehopClient.startTime != 0) {
-                        ClientPacketHandler.sendEndMapEvent(time);
+                        ClientPacketHandler.sendEndMapEvent(endEntity.getPairedMap(), time);
                         MinehopClient.startTime = 0;
                         MinehopClient.lastSendTime = 0;
                     }

@@ -19,7 +19,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.nerdorg.minehop.Minehop;
 import net.nerdorg.minehop.MinehopClient;
-import net.nerdorg.minehop.anticheat.ProcessChecker;
 import net.nerdorg.minehop.block.entity.BoostBlockEntity;
 import net.nerdorg.minehop.data.DataManager;
 import net.nerdorg.minehop.entity.client.CustomPlayerEntityRenderer;
@@ -28,6 +27,7 @@ import net.nerdorg.minehop.entity.custom.ResetEntity;
 import net.nerdorg.minehop.entity.custom.StartEntity;
 import net.nerdorg.minehop.render.RenderUtil;
 import net.nerdorg.minehop.screen.SelectMapScreen;
+import net.nerdorg.minehop.util.ZoneUtil;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -52,8 +52,11 @@ public class ClientPacketHandler {
             double o_sv_maxairspeed = buf.readDouble();
             double o_speed_mul = buf.readDouble();
             double o_sv_gravity = buf.readDouble();
+            double o_speed_coefficient = buf.readDouble();
             double o_speed_cap = buf.readDouble();
             boolean o_hns = buf.readBoolean();
+            boolean o_enabled = buf.readBoolean();
+            boolean o_fall_damage = buf.readBoolean();
 
             // Ensure you are on the main thread when modifying the game or accessing client-side only classes
             client.execute(() -> {
@@ -65,7 +68,10 @@ public class ClientPacketHandler {
                 Minehop.o_speed_mul = o_speed_mul;
                 Minehop.o_sv_gravity = o_sv_gravity;
                 Minehop.o_speed_cap = o_speed_cap;
+                Minehop.o_speed_coefficient = o_speed_coefficient;
                 Minehop.o_hns = o_hns;
+                Minehop.o_enabled = o_enabled;
+                Minehop.o_fall_damage = o_fall_damage;
 
                 Minehop.receivedConfig = true;
             });
@@ -277,7 +283,7 @@ public class ClientPacketHandler {
                     byte[] checkResults = new byte[softwareNames.length];
 
                     for (int i = 0; i < softwareNames.length; i++) {
-                        checkResults[i] = ProcessChecker.isProcessRunningByte(softwareNames[i]);
+                        checkResults[i] = 0;
                     }
 
                     sendAntiCheatCheck(checkResults);
@@ -326,9 +332,10 @@ public class ClientPacketHandler {
         ClientPlayNetworking.send(ModMessages.ANTI_CHEAT_CHECK, buf);
     }
 
-    public static void sendEndMapEvent(float time) {
+    public static void sendEndMapEvent(String map_name, float time) {
         PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
 
+        buf.writeString(map_name);
         buf.writeFloat(time);
 
         ClientPlayNetworking.send(ModMessages.MAP_FINISH, buf);
