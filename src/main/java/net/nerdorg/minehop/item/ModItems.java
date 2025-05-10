@@ -19,7 +19,7 @@ public class ModItems {
 
     private static void addItemsToOperatorTabItemGroup(FabricItemGroupEntries entries) {
         entries.add(BOUNDS_STICK);
-        entries.add(ModBlocks.BOOSTER_BLOCK);
+        entries.add(ModBlocks.BOOSTER_BLOCK.asItem());
     }
 
     private static void addItemsToCombatTabItemGroup(FabricItemGroupEntries entries) {

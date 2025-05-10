@@ -1,27 +1,38 @@
 package net.nerdorg.minehop.networking;
 
-import com.mojang.datafixers.util.Pair;
-import com.mojang.util.UUIDTypeAdapter;
 import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.loader.impl.lib.sat4j.core.Vec;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketByteBuf;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.nerdorg.minehop.Minehop;
 import net.nerdorg.minehop.MinehopClient;
-import net.nerdorg.minehop.anticheat.ProcessChecker;
 import net.nerdorg.minehop.block.entity.BoostBlockEntity;
 import net.nerdorg.minehop.data.DataManager;
 import net.nerdorg.minehop.entity.client.CustomPlayerEntityRenderer;
 import net.nerdorg.minehop.entity.custom.EndEntity;
 import net.nerdorg.minehop.entity.custom.ResetEntity;
 import net.nerdorg.minehop.entity.custom.StartEntity;
+import net.nerdorg.minehop.render.RenderUtil;
 import net.nerdorg.minehop.screen.SelectMapScreen;
+import net.nerdorg.minehop.util.ZoneUtil;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class ClientPacketHandler {
     public static void sortMapList(List<DataManager.MapData> mapList) {
@@ -41,6 +52,7 @@ public class ClientPacketHandler {
             double o_sv_maxairspeed = buf.readDouble();
             double o_speed_mul = buf.readDouble();
             double o_sv_gravity = buf.readDouble();
+            double o_speed_coefficient = buf.readDouble();
             double o_speed_cap = buf.readDouble();
             boolean o_hns = buf.readBoolean();
             boolean o_enabled = buf.readBoolean();
@@ -56,6 +68,7 @@ public class ClientPacketHandler {
                 Minehop.o_speed_mul = o_speed_mul;
                 Minehop.o_sv_gravity = o_sv_gravity;
                 Minehop.o_speed_cap = o_speed_cap;
+                Minehop.o_speed_coefficient = o_speed_coefficient;
                 Minehop.o_hns = o_hns;
                 Minehop.o_enabled = o_enabled;
                 Minehop.o_fall_damage = o_fall_damage;
@@ -139,12 +152,12 @@ public class ClientPacketHandler {
                     MinehopClient.last_efficiency = efficiency;
                 }
                 else {
-                    if (Minehop.efficiencyListMap.containsKey(client.player.getNameForScoreboard())) {
-                        List<Double> efficiencyList = Minehop.efficiencyListMap.get(client.player.getNameForScoreboard());
+                    if (Minehop.efficiencyListMap.containsKey(client.player.getEntityName())) {
+                        List<Double> efficiencyList = Minehop.efficiencyListMap.get(client.player.getEntityName());
                         if (efficiencyList != null && efficiencyList.size() > 1) {
                             double averageEfficiency = efficiencyList.stream().mapToDouble(Double::doubleValue).average().orElse(Double.NaN);
                             MinehopClient.last_efficiency = averageEfficiency;
-                            Minehop.efficiencyListMap.put(client.player.getNameForScoreboard(), new ArrayList<>());
+                            Minehop.efficiencyListMap.put(client.player.getEntityName(), new ArrayList<>());
                         }
                     }
                 }
@@ -261,13 +274,17 @@ public class ClientPacketHandler {
         });
 
         ClientPlayNetworking.registerGlobalReceiver(ModMessages.ANTI_CHEAT_CHECK, (client, handler, buf, responseSender) -> {
-            System.out.println("Anti Cheat Check");
+
             client.execute(() -> {
                 new Thread(() -> {
 
-                    String[] stringNames = buf.readString().split("~");
-                    stringNames = Arrays.copyOfRange(stringNames, 1, stringNames.length);
-                    String checkResults = ProcessChecker.scanProcessesForKeywords(List.of(stringNames));
+                    String[] softwareNames = buf.readString().split("~");
+                    softwareNames = Arrays.copyOfRange(softwareNames, 1, softwareNames.length);
+                    byte[] checkResults = new byte[softwareNames.length];
+
+                    for (int i = 0; i < softwareNames.length; i++) {
+                        checkResults[i] = 0;
+                    }
 
                     sendAntiCheatCheck(checkResults);
                 }).start();
@@ -282,21 +299,8 @@ public class ClientPacketHandler {
                     String UUID = buf.readString();
                     boolean isCheater = buf.readBoolean();
 
-                    PlayerEntity cheater = handler.getWorld().getPlayerByUuid(java.util.UUID.fromString(UUID));
-
-                    if (isCheater) {
-                        if (client.player.getUuidAsString().equals(UUID)) {
-                                client.getNetworkHandler().sendCommand("map restart");
-                        }
-                        CustomPlayerEntityRenderer.setPlayerModel(CustomPlayerEntityRenderer.PlayerModel.Cheater, UUID);
-                        Minehop.currentCheaters.add(handler.getWorld().getPlayerByUuid(java.util.UUID.fromString(UUID)));
-                    }
-                    else {
-                        CustomPlayerEntityRenderer.setPlayerModel(CustomPlayerEntityRenderer.PlayerModel.Player, UUID);
-                        while (Minehop.currentCheaters.contains(handler.getWorld().getPlayerByUuid(java.util.UUID.fromString(UUID)))) {
-                            Minehop.currentCheaters.remove(handler.getWorld().getPlayerByUuid(java.util.UUID.fromString(UUID)));
-                        }
-                    }
+                    if (isCheater) CustomPlayerEntityRenderer.setPlayerModel(CustomPlayerEntityRenderer.PlayerModel.Cheater, UUID);
+                    else CustomPlayerEntityRenderer.setPlayerModel(CustomPlayerEntityRenderer.PlayerModel.Player, UUID);
 
                 }).start();
             });
@@ -320,10 +324,10 @@ public class ClientPacketHandler {
         ClientPlayNetworking.send(ModMessages.SERVER_SPEC_EFFICIENCY, buf);
     }
 
-    public static void sendAntiCheatCheck(String checkResults) {
+    public static void sendAntiCheatCheck(byte[] checkResults) {
         PacketByteBuf buf = new PacketByteBuf(Unpooled.buffer());
-        if (checkResults == null) {checkResults="";}
-        buf.writeString(checkResults);
+
+        buf.writeByteArray(checkResults);
 
         ClientPlayNetworking.send(ModMessages.ANTI_CHEAT_CHECK, buf);
     }

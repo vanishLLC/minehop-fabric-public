@@ -1,15 +1,12 @@
 package net.nerdorg.minehop;
 
-import com.mojang.datafixers.util.Pair;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
 import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.nerdorg.minehop.block.ModBlocks;
 import net.nerdorg.minehop.block.entity.ModBlockEntities;
 import net.nerdorg.minehop.commands.*;
@@ -52,6 +49,7 @@ public class Minehop implements ModInitializer {
 	public static double o_speed_mul = 0;
 	public static double o_sv_gravity = 0;
 	public static double o_speed_cap = 0;
+	public static double o_speed_coefficient = 0;
 	public static boolean o_hns = false;
 	public static boolean o_enabled = true;
 	public static boolean o_fall_damage = true;
@@ -72,8 +70,6 @@ public class Minehop implements ModInitializer {
 	public static HashMap<String, Double> speedCapMap = new HashMap<>();
 	public static HashMap<String, List<Double>> gaugeListMap = new HashMap<>();
 	public static HashMap<String, Zone> playerMapLocation = new HashMap<>();
-
-	public static List<PlayerEntity> currentCheaters = new ArrayList<>();
 
 	@Override
 	public void onInitialize() {

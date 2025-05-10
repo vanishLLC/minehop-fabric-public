@@ -51,10 +51,18 @@ public class ConfigCommands {
                                 })
                         )
                         .then(LiteralArgumentBuilder.<ServerCommandSource>literal("toggle_enabled")
-                                    .executes(context -> {
-                                        handleToggleEnabled(context);
-                                        return Command.SINGLE_SUCCESS;
-                                    })
+                                .executes(context -> {
+                                    handleToggleEnabled(context);
+                                    return Command.SINGLE_SUCCESS;
+                                })
+                        )
+                        .then(LiteralArgumentBuilder.<ServerCommandSource>literal("speed_coefficient")
+                                .then(RequiredArgumentBuilder.<ServerCommandSource, Double>argument("speed_coefficient", DoubleArgumentType.doubleArg())
+                                        .executes(context -> {
+                                            handleSetSpeedCoeff(context);
+                                            return Command.SINGLE_SUCCESS;
+                                        })
+                                )
                         )
                         .then(LiteralArgumentBuilder.<ServerCommandSource>literal("sv_friction")
                                 .then(RequiredArgumentBuilder.<ServerCommandSource, Double>argument("sv_friction", DoubleArgumentType.doubleArg())
@@ -129,6 +137,17 @@ public class ConfigCommands {
         ConfigWrapper.saveConfig(config);
 
         Logger.logSuccess(serverPlayerEntity, "Set enabled to " + config.enabled);
+    }
+
+    private static void handleSetSpeedCoeff(CommandContext<ServerCommandSource> context) {
+        ServerPlayerEntity serverPlayerEntity = context.getSource().getPlayer();
+        MinehopConfig config = ConfigWrapper.config;
+
+        config.movement.speed_coefficient = DoubleArgumentType.getDouble(context, "speed_coefficient");
+
+        ConfigWrapper.saveConfig(config);
+
+        Logger.logSuccess(serverPlayerEntity, "Set speed_coefficient to " + config.movement.speed_coefficient);
     }
 
     private static void handleSetFriction(CommandContext<ServerCommandSource> context) {

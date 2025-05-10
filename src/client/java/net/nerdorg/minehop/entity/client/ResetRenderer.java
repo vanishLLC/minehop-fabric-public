@@ -36,7 +36,8 @@ public class ResetRenderer extends MobEntityRenderer<ResetEntity, ResetModel> {
     @Override
     public void render(ResetEntity resetEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i) {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player.isCreative()) {
+
+        if (!client.player.isCreative()) {
             float time = (((float) System.nanoTime() - (float) MinehopClient.startTime) / 1000000000f);
 
             if (MinehopClient.startTime != 0) {

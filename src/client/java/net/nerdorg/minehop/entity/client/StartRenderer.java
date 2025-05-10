@@ -1,6 +1,5 @@
 package net.nerdorg.minehop.entity.client;
 
-import com.mojang.datafixers.util.Pair;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -16,9 +15,10 @@ import net.nerdorg.minehop.MinehopClient;
 import net.nerdorg.minehop.entity.custom.StartEntity;
 import net.nerdorg.minehop.networking.ClientPacketHandler;
 import net.nerdorg.minehop.render.RenderUtil;
+import org.joml.Vector3f;
+import com.mojang.datafixers.util.Pair;
 import net.nerdorg.minehop.data.DataManager;
 import net.nerdorg.minehop.util.ZoneUtil;
-import org.joml.Vector3f;
 
 public class StartRenderer extends MobEntityRenderer<StartEntity, StartModel> {
     private static final Identifier TEXTURE = new Identifier(Minehop.MOD_ID, "textures/entity/zone.png");
@@ -39,8 +39,9 @@ public class StartRenderer extends MobEntityRenderer<StartEntity, StartModel> {
 
     @Override
     public void render(StartEntity startEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i) {
-        float time = (((float) System.nanoTime() - (float) MinehopClient.startTime) / 1000000000f);
         MinecraftClient client = MinecraftClient.getInstance();
+
+        float time = (((float) System.nanoTime() - (float) MinehopClient.startTime) / 1000000000f);
 
         if (MinehopClient.startTime != 0) {
             ClientPacketHandler.sendCurrentTime(time);
@@ -50,7 +51,7 @@ public class StartRenderer extends MobEntityRenderer<StartEntity, StartModel> {
         BlockPos corner2 = startEntity.getCorner2();
         if (corner1 != null && corner2 != null) {
             Box colliderBox = new Box(new Vec3d(corner1.getX(), corner1.getY(), corner1.getZ()), new Vec3d(corner2.getX(), corner2.getY(), corner2.getZ()));
-            if (!client.player.isCreative() && !client.player.isSpectator() && (Minehop.groundedList.contains(client.player.getNameForScoreboard()))) {
+            if (!client.player.isCreative() && !client.player.isSpectator() && (Minehop.groundedList.contains(client.player.getEntityName()))) {
                 if (colliderBox.contains(client.player.getPos())) {
                     MinehopClient.startTime = System.nanoTime();
                     MinehopClient.lastSendTime = 0;
@@ -60,7 +61,7 @@ public class StartRenderer extends MobEntityRenderer<StartEntity, StartModel> {
                             DataManager.currentMapPlayers.remove(entry);
                             DataManager.currentMapPlayers.add(new Pair<>(
                                     client.player.getUuidAsString(),
-                                   startEntity.getPairedMap()
+                                    startEntity.getPairedMap()
                             ));
                             changed = true;
                             break;

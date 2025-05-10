@@ -89,24 +89,25 @@ public abstract class LivingEntityMixin extends Entity {
 
     @Inject(method = "teleport", at = @At("HEAD"))
     public void onTeleport(double x, double y, double z, boolean particleEffects, CallbackInfoReturnable<Boolean> cir) {
-        HNSManager.taggedMap.remove(this.getNameForScoreboard());
+        HNSManager.taggedMap.remove(this.getEntityName());
     }
 
     @Inject(method = "damage", at = @At("HEAD"), cancellable = true)
     public void onDamage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         MinehopConfig config = ConfigWrapper.config;
-        if (source.isOf(DamageTypes.FALL) && !config.fall_damage) {
+        if (source.isOf(DamageTypes.FALL)) {
             if (this.getWorld().getEntityById(this.getId()) instanceof PlayerEntity player) {
                 DataManager.MapData mapData = ZoneUtil.getCurrentMap(player);
                 if (mapData != null && mapData.hns) {
                     BlockState belowState = this.getWorld().getBlockState(this.getBlockPos().offset(Direction.DOWN, 1));
                     if (amount >= 20 && !(belowState.getBlock() instanceof StairsBlock)) {
-                        HNSManager.taggedMap.put(player.getNameForScoreboard(), true);
+                        HNSManager.taggedMap.put(player.getEntityName(), true);
                         Logger.logFailure(player, "You were tagged because you fell too far. You can break your fall by landing on stairs.");
                     }
                 }
             }
-            cir.cancel();
+            if (!config.fall_damage)
+                cir.cancel();
         }
         else {
             Entity sourceEntity = source.getSource();
@@ -144,6 +145,7 @@ public abstract class LivingEntityMixin extends Entity {
             config.movement.sv_maxairspeed = Minehop.o_sv_maxairspeed;
             config.movement.speed_mul = Minehop.o_speed_mul;
             config.movement.sv_gravity = Minehop.o_sv_gravity;
+            config.movement.speed_coefficient = Minehop.o_speed_coefficient;
             config.enabled = Minehop.o_enabled;
             config.fall_damage = Minehop.o_fall_damage;
             speedCap = Minehop.o_speed_cap;
@@ -188,12 +190,12 @@ public abstract class LivingEntityMixin extends Entity {
         //
         boolean fullGrounded = this.wasOnGround && this.isOnGround(); //Allows for no friction 1-frame upon landing.
         if (fullGrounded) {
-            if (!Minehop.groundedList.contains(this.getNameForScoreboard())) {
-                Minehop.groundedList.add(this.getNameForScoreboard());
+            if (!Minehop.groundedList.contains(this.getEntityName())) {
+                Minehop.groundedList.add(this.getEntityName());
             }
         }
         else {
-            Minehop.groundedList.remove(this.getNameForScoreboard());
+            Minehop.groundedList.remove(this.getEntityName());
         }
         if (fullGrounded) {
             Vec3d velFin = this.getVelocity();
@@ -234,15 +236,15 @@ public abstract class LivingEntityMixin extends Entity {
 //        this.setYaw((float) perfectAngle);
 
         if (this.isOnGround()) {
-            if (Minehop.efficiencyListMap.containsKey(this.getNameForScoreboard())) {
-                List<Double> efficiencyList = Minehop.efficiencyListMap.get(this.getNameForScoreboard());
+            if (Minehop.efficiencyListMap.containsKey(this.getEntityName())) {
+                List<Double> efficiencyList = Minehop.efficiencyListMap.get(this.getEntityName());
                 if (efficiencyList != null && efficiencyList.size() > 0) {
                     double averageEfficiency = efficiencyList.stream().mapToDouble(Double::doubleValue).average().orElse(Double.NaN);
                     Entity localEntity = this.getWorld().getEntityById(this.getId());
                     if (localEntity instanceof PlayerEntity playerEntity) {
-                        Minehop.efficiencyUpdateMap.put(playerEntity.getNameForScoreboard(), averageEfficiency);
+                        Minehop.efficiencyUpdateMap.put(playerEntity.getEntityName(), averageEfficiency);
                     }
-                    Minehop.efficiencyListMap.put(this.getNameForScoreboard(), new ArrayList<>());
+                    Minehop.efficiencyListMap.put(this.getEntityName(), new ArrayList<>());
                 }
             }
         }
@@ -259,7 +261,8 @@ public abstract class LivingEntityMixin extends Entity {
             if (fullGrounded) {
                 maxVel = (float) (this.movementSpeed * config.movement.speed_mul);
             } else {
-                maxVel = (float) (config.movement.sv_maxairspeed);
+                double velVal = this.getVelocity().horizontalLength();
+                maxVel = (float) (config.movement.sv_maxairspeed * ((velVal * config.movement.speed_coefficient) / velVal));
 
                 angleBetween = Math.acos(accelVec.normalize().dotProduct(moveDir.normalize()));
 
@@ -292,15 +295,15 @@ public abstract class LivingEntityMixin extends Entity {
                 double gaugeValue = sI < 0 || fI < 0 ? (normalYaw - perfectAngle) : (perfectAngle - normalYaw);
                 gaugeValue = normalizeAngle(gaugeValue) * 2;
 
-                List<Double> gaugeList = Minehop.gaugeListMap.containsKey(this.getNameForScoreboard()) ? Minehop.gaugeListMap.get(this.getNameForScoreboard()) : new ArrayList<>();
+                List<Double> gaugeList = Minehop.gaugeListMap.containsKey(this.getEntityName()) ? Minehop.gaugeListMap.get(this.getEntityName()) : new ArrayList<>();
                 gaugeList.add(gaugeValue);
-                Minehop.gaugeListMap.put(this.getNameForScoreboard(), gaugeList);
+                Minehop.gaugeListMap.put(this.getEntityName(), gaugeList);
 
                 double strafeEfficiency = MathHelper.clamp((((v - nogainv) / (maxgainv - nogainv)) * 100), 0D, 100D);
-                Minehop.efficiencyMap.put(this.getNameForScoreboard(), strafeEfficiency);
-                List<Double> efficiencyList = Minehop.efficiencyListMap.containsKey(this.getNameForScoreboard()) ? Minehop.efficiencyListMap.get(this.getNameForScoreboard()) : new ArrayList<>();
+                Minehop.efficiencyMap.put(this.getEntityName(), strafeEfficiency);
+                List<Double> efficiencyList = Minehop.efficiencyListMap.containsKey(this.getEntityName()) ? Minehop.efficiencyListMap.get(this.getEntityName()) : new ArrayList<>();
                 efficiencyList.add(strafeEfficiency);
-                Minehop.efficiencyListMap.put(this.getNameForScoreboard(), efficiencyList);
+                Minehop.efficiencyListMap.put(this.getEntityName(), efficiencyList);
             }
 
             this.setVelocity(new Vec3d(newHorizontalVelocity.getX(), newVelocity.getY(), newHorizontalVelocity.getZ()));
