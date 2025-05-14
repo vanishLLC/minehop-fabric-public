@@ -1,5 +1,6 @@
 package net.nerdorg.minehop.motd;
 
+import java.security.SecureRandom;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.nerdorg.minehop.config.ConfigWrapper;
 
@@ -20,7 +21,7 @@ public class MotdManager {
             "Thanks for playing on minehop!",
             "Brought to you by nerd org.",
             "How to make cookies: Preheat your oven to 375°F (190°C).\nMix the butter, sugars, and vanilla in a large bowl until creamy. Add the eggs, one at a time, beating well after each addition.\nCombine the flour, baking soda, and salt in a separate bowl. Gradually beat the dry ingredients into the butter mixture.\nStir in the chocolate chips and nuts (if using) by hand with a wooden spoon or spatula.\nDrop by rounded tablespoonfuls onto ungreased baking sheets, leaving enough space between each cookie for them to spread.\nBake for 9 to 11 minutes or until golden brown. Cool on baking sheets for 2 minutes; remove to wire racks to cool completely."));
-    private static Random random = new Random();
+    private static Random random = new SecureRandom();
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register((server -> {

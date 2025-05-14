@@ -1,5 +1,6 @@
 package net.nerdorg.minehop.hns;
 
+import java.security.SecureRandom;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
@@ -29,7 +30,7 @@ public class HNSManager {
     public static HashMap<String, Boolean> mapHasTaggers = new HashMap<>();
     public static HashMap<String, Integer> mapTimers = new HashMap<>();
 
-    private static final Random random = new Random();
+    private static final Random random = new SecureRandom();
 
     public static void register() {
         ServerTickEvents.END_SERVER_TICK.register((server) -> {

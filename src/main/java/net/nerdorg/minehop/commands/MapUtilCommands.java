@@ -10,6 +10,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import java.security.SecureRandom;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.command.EntitySelector;
 import net.minecraft.command.argument.EntityArgumentType;
@@ -37,7 +38,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class MapUtilCommands {
-    private static Random random = new Random();
+    private static Random random = new SecureRandom();
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     public static void register() {

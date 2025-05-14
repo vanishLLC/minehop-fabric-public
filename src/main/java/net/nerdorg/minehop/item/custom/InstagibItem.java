@@ -1,6 +1,7 @@
 package net.nerdorg.minehop.item.custom;
 
 import com.mojang.logging.LogUtils;
+import java.security.SecureRandom;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroupEntries;
 import net.minecraft.block.*;
 import net.minecraft.entity.Entity;
@@ -41,7 +42,7 @@ import java.util.*;
 
 public class InstagibItem extends Item {
     private static final HashMap<String, Integer> gibDelayList = new HashMap<>();
-    private final Random random = new Random();
+    private final Random random = new SecureRandom();
 
     public InstagibItem(Settings settings) {
         super(settings);
