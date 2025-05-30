@@ -300,7 +300,7 @@ public class MapUtilCommands {
                 }
             }
             if (currentMapData != null) {
-                if (currentMapData.worldKey == null || currentMapData.worldKey.equals("")) {
+                if (currentMapData.worldKey == null || "".equals(currentMapData.worldKey)) {
                     Minehop.mapList.remove(currentMapData);
                     currentMapData.worldKey = context.getSource().getServer().getOverworld().getRegistryKey().toString();
                     Minehop.mapList.add(currentMapData);
@@ -359,7 +359,7 @@ public class MapUtilCommands {
         }
 
         if (tpData != null) {
-            if (tpData.worldKey == null || tpData.worldKey.equals("")) {
+            if (tpData.worldKey == null || "".equals(tpData.worldKey)) {
                 Minehop.mapList.remove(tpData);
                 tpData.worldKey = context.getSource().getServer().getOverworld().getRegistryKey().toString();
                 Minehop.mapList.add(tpData);
@@ -695,7 +695,7 @@ public class MapUtilCommands {
 
         for (Object object : Minehop.mapList) {
             if (object instanceof DataManager.MapData mapData) {
-                if (!mapData.name.equals("spawn")) {
+                if (!"spawn".equals(mapData.name)) {
                     mapNameList.add(mapData.name);
                 }
             }

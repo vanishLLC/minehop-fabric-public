@@ -36,7 +36,7 @@ public class JoinLeaveManager {
             if (!networkHandler.player.hasPermissionLevel(4)) {
                 DataManager.MapData mapData = DataManager.getMap("spawn");
                 if (mapData != null) {
-                    if (mapData.worldKey == null || mapData.worldKey.equals("")) {
+                    if (mapData.worldKey == null || "".equals(mapData.worldKey)) {
                         Minehop.mapList.remove(mapData);
                         mapData.worldKey = server.getOverworld().getRegistryKey().toString();
                         Minehop.mapList.add(mapData);

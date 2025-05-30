@@ -11,7 +11,7 @@ public class DiscordIntegration {
         MinehopConfig config = ConfigWrapper.config;
 
         if (config != null) {
-            if (!config.bot_token.equals("") && !config.record_channel.equals("")) {
+            if (!"".equals(config.bot_token) && !"".equals(config.record_channel)) {
                 new Thread(() -> {
                     try {
                         JDABuilder builder = JDABuilder.createDefault(config.bot_token);

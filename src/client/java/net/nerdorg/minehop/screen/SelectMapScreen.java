@@ -99,7 +99,7 @@ public class SelectMapScreen extends Screen {
         this.arenaListWidget = new MapListWidget(this.client, this.width, this.height - 32, 32, 20);
         this.hnsListWidget = new MapListWidget(this.client, this.width, this.height - 32, 32, 20);
         for (DataManager.MapData mapData : Minehop.mapList) {
-            if (!mapData.name.equals("spawn")) {
+            if (!"spawn".equals(mapData.name)) {
                 double avgTime = 0;
                 double recordCount = 0;
                 for (DataManager.RecordData personalRecordData : Minehop.personalRecordList) {
@@ -142,9 +142,9 @@ public class SelectMapScreen extends Screen {
             MapListWidget newBhopListWidget = new MapListWidget(this.client, this.width, this.height - 32, 32, 20);
             MapListWidget newArenaListWidget = new MapListWidget(this.client, this.width, this.height - 32, 32, 20);
             MapListWidget newHNSListWidget = new MapListWidget(this.client, this.width, this.height - 32, 32, 20);
-            if (!fieldText.equals("")) {
+            if (!"".equals(fieldText)) {
                 for (DataManager.MapData mapData : Minehop.mapList) {
-                    if (!mapData.name.equals("spawn") && mapData.name.contains(fieldText)) {
+                    if (!"spawn".equals(mapData.name) && mapData.name.contains(fieldText)) {
                         double avgTime = 0;
                         double recordCount = 0;
                         for (DataManager.RecordData personalRecordData : Minehop.personalRecordList) {
@@ -173,7 +173,7 @@ public class SelectMapScreen extends Screen {
                 }
             } else {
                 for (DataManager.MapData mapData : Minehop.mapList) {
-                    if (!mapData.name.equals("spawn")) {
+                    if (!"spawn".equals(mapData.name)) {
                         double avgTime = 0;
                         double recordCount = 0;
                         for (DataManager.RecordData personalRecordData : Minehop.personalRecordList) {

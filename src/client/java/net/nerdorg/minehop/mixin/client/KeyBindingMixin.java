@@ -39,11 +39,11 @@ public abstract class KeyBindingMixin {
 
     @Inject(method = "<init>*", at = @At("RETURN"))
     private void onInit(String translationKey, int code, String category, CallbackInfo ci) {
-        if (translationKey.equals("key.left")) {
+        if ("key.left".equals(translationKey)) {
             leftKey = (KeyBinding)(Object)this;
-        } else if (translationKey.equals("key.right")) {
+        } else if ("key.right".equals(translationKey)) {
             rightKey = (KeyBinding)(Object)this;
-        } else if (translationKey.equals("key.sneak")) {
+        } else if ("key.sneak".equals(translationKey)) {
             sneakKey = (KeyBinding)(Object)this;
         }
     }
